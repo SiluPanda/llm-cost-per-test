@@ -3,6 +3,7 @@
 Per-test LLM API cost tracking with budgets and baseline comparison.
 
 [![npm version](https://img.shields.io/npm/v/llm-cost-per-test.svg)](https://www.npmjs.com/package/llm-cost-per-test)
+[![npm downloads](https://img.shields.io/npm/dt/llm-cost-per-test.svg)](https://www.npmjs.com/package/llm-cost-per-test)
 [![license](https://img.shields.io/npm/l/llm-cost-per-test.svg)](https://github.com/SiluPanda/llm-cost-per-test/blob/master/LICENSE)
 [![node](https://img.shields.io/node/v/llm-cost-per-test.svg)](https://nodejs.org)
 
