@@ -58,6 +58,14 @@ describe('LLMCostReporter', () => {
       expect(report.tests[0].testName).toBe('auto test');
     });
 
+    it('totalTestCount includes auto-created tests from recordApiCall', () => {
+      const reporter = createReporter();
+      reporter.recordApiCall('auto-test-1', 'gpt-4o', 100, 50);
+      reporter.recordApiCall('auto-test-2', 'gpt-4o', 200, 100);
+      const report = reporter.generateReport();
+      expect(report.totalTests).toBe(2);
+    });
+
     it('records manual cost override via recordApiCall', () => {
       const reporter = createReporter();
       reporter.startTest('manual cost', 'test.ts');
