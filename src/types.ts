@@ -66,8 +66,6 @@ export interface CostReporterOptions {
   showPerTestTable?: boolean;
   /** Minimum cost threshold for a test to appear in the report. Default: 0 (show all). */
   minCostToShow?: number;
-  /** Integration with llm-vcr. When provided, reads cost data from cassettes. */
-  vcr?: { cassettesDir: string };
 }
 
 // ── Input Types ─────────────────────────────────────────────────────

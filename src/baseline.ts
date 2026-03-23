@@ -1,4 +1,5 @@
 import * as fs from 'node:fs';
+import * as nodePath from 'node:path';
 import type { CostBaseline, BaselineDiff, TestCostEntry, TestCostDiff, BaselineConfig } from './types';
 
 /**
@@ -59,8 +60,8 @@ export function saveBaseline(path: string, tests: TestCostEntry[], totalCost: nu
     };
   }
 
-  const dir = path.substring(0, path.lastIndexOf('/'));
-  if (dir && !fs.existsSync(dir)) {
+  const dir = nodePath.dirname(path);
+  if (dir && dir !== '.' && !fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
 

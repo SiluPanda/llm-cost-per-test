@@ -19,9 +19,8 @@ import { formatTable, formatJSON, formatMarkdown, formatJUnit } from './formatte
 /**
  * Resolve reporter options with defaults and environment variable overrides.
  */
-function resolveOptions(options?: CostReporterOptions): Required<Omit<CostReporterOptions, 'baseline' | 'vcr'>> & {
+function resolveOptions(options?: CostReporterOptions): Required<Omit<CostReporterOptions, 'baseline'>> & {
   baseline?: CostReporterOptions['baseline'];
-  vcr?: CostReporterOptions['vcr'];
 } {
   const envOutput = process.env.LLM_COST_OUTPUT as OutputFormat | undefined;
   const envOutputFile = process.env.LLM_COST_OUTPUT_FILE;
@@ -38,7 +37,6 @@ function resolveOptions(options?: CostReporterOptions): Required<Omit<CostReport
     showFileBreakdown: options?.showFileBreakdown ?? true,
     showPerTestTable: options?.showPerTestTable ?? true,
     minCostToShow: options?.minCostToShow ?? 0,
-    vcr: options?.vcr,
   };
 }
 
@@ -97,6 +95,7 @@ export class LLMCostReporter {
       // Auto-create tracker if startTest wasn't called
       tracker = createCostTracker();
       this.trackers.set(testName, tracker);
+      this.totalTestCount++;
       if (!this.testFiles.has(testName)) {
         this.testFiles.set(testName, 'unknown');
       }
