@@ -97,10 +97,56 @@ export function getPrice(model: string): ModelPricing {
 /**
  * Calculate cost for a given model and token counts.
  * Formula: (inputTokens / 1_000_000 * inputPricePerMTok) + (outputTokens / 1_000_000 * outputPricePerMTok)
+ *
+ * @param pricingOverride - Optional per-instance pricing table. When provided,
+ *   these prices take priority over both global custom pricing and built-in pricing.
  */
-export function calculateCost(model: string, inputTokens: number, outputTokens: number): number {
-  const pricing = getPrice(model);
+export function calculateCost(
+  model: string,
+  inputTokens: number,
+  outputTokens: number,
+  pricingOverride?: Record<string, ModelPricing>,
+): number {
+  const pricing = pricingOverride
+    ? getPriceWithOverride(model, pricingOverride)
+    : getPrice(model);
   return (inputTokens / 1_000_000) * pricing.input + (outputTokens / 1_000_000) * pricing.output;
+}
+
+/**
+ * Resolve pricing for a model using an instance-level override table.
+ * Resolution order:
+ * 1. pricingOverride (exact match)
+ * 2. Global custom pricing (exact match)
+ * 3. Built-in pricing (exact match)
+ * 4. pricingOverride (prefix match)
+ * 5. Global custom / built-in pricing (prefix match)
+ * 6. model-price-registry fallback
+ * 7. { input: 0, output: 0 } with a warning
+ */
+function getPriceWithOverride(model: string, pricingOverride: Record<string, ModelPricing>): ModelPricing {
+  // 1. Override exact match
+  if (pricingOverride[model]) {
+    return pricingOverride[model];
+  }
+
+  // 2-3. Global exact match (delegates to getPrice's exact-match logic)
+  if (customPricing[model]) {
+    return customPricing[model];
+  }
+  if (BUILT_IN_PRICING[model]) {
+    return BUILT_IN_PRICING[model];
+  }
+
+  // 4-5. Prefix matching across all tables (override has highest priority)
+  const allPricing = { ...BUILT_IN_PRICING, ...customPricing, ...pricingOverride };
+  const prefixMatch = findPrefixMatch(model, allPricing);
+  if (prefixMatch) {
+    return prefixMatch;
+  }
+
+  // 6-7. Fall through to getPrice for registry fallback and warning
+  return getPrice(model);
 }
 
 /**
