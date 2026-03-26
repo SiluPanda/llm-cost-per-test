@@ -1,16 +1,20 @@
 import type { CostTracker, CostSummary, UsageInput, UsageRecord, TrackerOptions, ModelPricing } from './types';
-import { calculateCost, registerPricing } from './pricing';
+import { calculateCost } from './pricing';
 
 /**
  * Implementation of the CostTracker interface.
  * Accumulates UsageRecord entries and computes cost summaries.
+ *
+ * Each instance holds its own pricing override table so that two trackers
+ * created with different pricing for the same model compute different costs.
  */
 class CostTrackerImpl implements CostTracker {
   private entries: UsageRecord[] = [];
+  private readonly pricingOverride?: Record<string, ModelPricing>;
 
   constructor(options?: TrackerOptions) {
     if (options?.pricing) {
-      registerPricing(options.pricing);
+      this.pricingOverride = { ...options.pricing };
     }
   }
 
@@ -19,7 +23,7 @@ class CostTrackerImpl implements CostTracker {
    * If usage.cost is provided, it overrides the computed cost.
    */
   record(usage: UsageInput): void {
-    const cost = usage.cost ?? calculateCost(usage.model, usage.inputTokens, usage.outputTokens);
+    const cost = usage.cost ?? calculateCost(usage.model, usage.inputTokens, usage.outputTokens, this.pricingOverride);
 
     const record: UsageRecord = {
       model: usage.model,

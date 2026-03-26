@@ -201,5 +201,39 @@ describe('CostTracker', () => {
       const summary = tracker.getCost();
       expect(summary.totalCost).toBe(30); // 10 + 20
     });
+
+    it('isolates custom pricing per tracker instance', () => {
+      const trackerA = createCostTracker({
+        pricing: { 'shared-model': { input: 10, output: 20 } },
+      });
+      const trackerB = createCostTracker({
+        pricing: { 'shared-model': { input: 100, output: 200 } },
+      });
+
+      trackerA.record({ model: 'shared-model', inputTokens: 1_000_000, outputTokens: 1_000_000 });
+      trackerB.record({ model: 'shared-model', inputTokens: 1_000_000, outputTokens: 1_000_000 });
+
+      const summaryA = trackerA.getCost();
+      const summaryB = trackerB.getCost();
+
+      // Tracker A should use its own pricing: 10 + 20 = 30
+      expect(summaryA.totalCost).toBe(30);
+      // Tracker B should use its own pricing: 100 + 200 = 300
+      expect(summaryB.totalCost).toBe(300);
+    });
+
+    it('does not leak instance pricing into the global scope', () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      createCostTracker({
+        pricing: { 'instance-only-model': { input: 50, output: 50 } },
+      });
+
+      // A tracker without custom pricing should NOT see 'instance-only-model'
+      const defaultTracker = createCostTracker();
+      defaultTracker.record({ model: 'instance-only-model', inputTokens: 1_000_000, outputTokens: 1_000_000 });
+      const summary = defaultTracker.getCost();
+      // Unknown model => cost 0
+      expect(summary.totalCost).toBe(0);
+    });
   });
 });
